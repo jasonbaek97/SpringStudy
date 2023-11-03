@@ -2,8 +2,12 @@ package com.example.springstudy;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import java.util.*;
 
 @SpringBootApplication
 public class SpringStudyApplication {
@@ -40,3 +44,35 @@ class Coffee {
         this.name = name;
     }
 }
+
+@RestController
+@RequestMapping("/")
+class RestApiDemoController {
+    private List<Coffee> coffees = new ArrayList<>();
+
+    public RestApiDemoController() {
+        coffees.addAll(List.of(
+                new Coffee("Cafe Latte"),
+                new Coffee("Americano"),
+                new Coffee("Espresso"),
+                new Coffee("Cafe Moca")
+        ));
+    }
+
+    // ./coffees : 커피목록 출력
+    @GetMapping("/coffees")
+    Iterable<Coffee> getCoffees(){
+        return coffees;
+    }
+
+    // ./coffees/{id} : 커피찾기
+    @GetMapping("/coffees/{id}")
+    Optional<Coffee> getCoffeeById(@PathVariable String id){
+        for (Coffee c : coffees) {
+            if(c.getId().equals(id))
+                return Optional.of(c);
+        }
+        return Optional.empty();
+    }
+}
+
