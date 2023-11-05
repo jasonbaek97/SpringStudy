@@ -1,11 +1,13 @@
 package com.example.springstudy;
 
+import jakarta.persistence.Entity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.annotation.Id;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
@@ -43,11 +45,13 @@ class Coffee {
     public void setName(String name){
         this.name = name;
     }
+
 }
 
 @RestController
 @RequestMapping("/")
 class RestApiDemoController {
+
     private List<Coffee> coffees = new ArrayList<>();
 
     public RestApiDemoController() {
@@ -65,14 +69,44 @@ class RestApiDemoController {
         return coffees;
     }
 
-    // ./coffees/{id} : 커피찾기
-    @GetMapping("/coffees/{id}")
+    // ./{id} : 커피찾기
+    @GetMapping("/{id}")
     Optional<Coffee> getCoffeeById(@PathVariable String id){
         for (Coffee c : coffees) {
-            if(c.getId().equals(id))
+            if(c.getId().equals(id)) {
                 return Optional.of(c);
+            }
         }
         return Optional.empty();
+    }
+
+    @PostMapping
+    Coffee postCoffee(@RequestBody Coffee coffee){
+        coffees.add(coffee);
+        return coffee;
+    }
+
+    @PutMapping("coffees/{id}")
+    ResponseEntity<Coffee> putCoffee(@PathVariable String id, @RequestBody Coffee coffee){
+        // id가 있으면 Update 하고, 없으면 추가 한다
+        int coffeeIndex = -1;
+
+        for(Coffee c : coffees){
+            if(c.getId().equals(id)){
+                coffeeIndex = coffees.indexOf(c);
+                coffees.set(coffeeIndex,coffee);
+            }
+        }
+
+        return (coffeeIndex == -1) ?
+                new ResponseEntity<>(postCoffee(coffee), HttpStatus.CREATED) :
+                new ResponseEntity<>(coffee,HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    void deleteCoffee(@PathVariable String id){
+        // id 일치하면 리스트에서 삭제
+        coffees.removeIf(c->c.getId().equals(id));
     }
 }
 
